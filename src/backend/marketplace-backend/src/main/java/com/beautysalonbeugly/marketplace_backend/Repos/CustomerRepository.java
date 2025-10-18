@@ -16,7 +16,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByNick(String nick);
 
-    // > just for count orders(item list) : report purposes
+    // > just for count orders(item list) : report purpose only
     @Query("SELECT COUNT(o) FROM Order o WHERE o.customer.id = :customerId")
     Long countOrdersByCustomerId(Long customerId);
 

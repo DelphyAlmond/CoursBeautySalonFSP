@@ -20,31 +20,31 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
 
     // Report purpose :
     // > total sum of all finalized transactions (receipts)
-    // handled by a worker (via their associated Order/Visit)
-    // [ ! ] Receipt linked to EITHER an Order/Visit -> fetch worker from
-    // (Joining through the Order/Visit and then to Worker)
-
-    // So = if a Receipt has an Order, the worker for the order
-    // is relevant, else: the worker for the visit is relevant.
-
-    // [ * ] this query might be better expressed using Criteria API in a
+    // handled by a worker (through Receipt)
+    // [ * ] This query might be better expressed using Criteria API in a
     // service or as two separate queries + muliple repo-s.
 
     @Query("SELECT SUM(r.finalTotalAmount) FROM Receipt r " +
-            "LEFT JOIN r.order o " +
-            "LEFT JOIN r.visit v " +
-            "WHERE (o.worker.id = :workerId OR v.worker.id = :workerId) " +
+            "WHERE r.worker.id = :workerId " +
             "AND r.receiptDate BETWEEN :startDate AND :endDate")
-    Optional<Double> sumFinalTotalAmountByWorkerAndDateRange(Long workerId, LocalDateTime startDate,
-            LocalDateTime endDate);
+    Optional<Double> sumSells(Long workerId, LocalDateTime startDate, LocalDateTime endDate);
 
-    // > total count of items (products + services) associated with receipts for a
-    // worker
-    // This would require more complex aggregation across OrderItems and VisitItems.
-    // It's generally better to perform this aggregation in the service layer
-    // by calling sumProductSalesByWorker and sumServiceSalesByWorker from
-    // WorkerRepository.
-    // Or, if Order and Visit had direct worker links, a query could be made more
-    // complex.
-    // For now, let's stick to total transaction amount.
+    // > count of items clarified by worker
+    @Query("SELECT COUNT(r) FROM Receipt r " +
+            "WHERE r.worker.id = :workerId " +
+            "AND r.receiptDate BETWEEN :startDate AND :endDate")
+    Long countReceipts(Long workerId, LocalDateTime startDate, LocalDateTime endDate);
 }
+
+// > total count of items (products + services) associated with receipts
+// for a worker -> require complex aggregation across OrderItems and VisitItems.
+// [ * ] Better to perform this aggregation in the service layer
+// by calling sumProductSalesByWorker and sumServiceSalesByWorker from
+// WorkerRepository.
+
+// 1. Find all receipts by worker and date range.
+// 2. For each receipt, if it has an Order, get its OrderItems.
+// 3. For each receipt, if it has a Visit, get its VisitItems.
+// 4. Sum quantities from all collected OrderItems and VisitItems.
+// This cannot be efficiently done in a single JpaRepository method due to the
+// multiple branching relationships.
