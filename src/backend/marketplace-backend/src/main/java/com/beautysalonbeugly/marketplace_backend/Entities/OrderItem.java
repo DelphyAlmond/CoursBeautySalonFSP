@@ -31,30 +31,24 @@ public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private int quantity; // > How many units of this product are in the current list
-    private double priceAtOrder; // > The price of product UNIT
-    private double discountPercentage; // discount applied to item (* 0.10 for 10% off)
-    private double finalItemPrice; // [*] (priceAtOrder * quantity) * (1 - discountPercentage)
+    private int quantity;
+    private double priceAtOrder;
+    private double discountPercentage;
+    private double finalItemPrice;
+    // [*] (priceAtOrder * quantity) * (1 - discountPercentage)
 
-    // >> Many OrderItems belong to one Order
-    // The foreign key 'order_id' will be created in the 'order_item' table [!]
-    @ManyToOne(fetch = FetchType.LAZY) // Efficient: Don't load the whole Order unless needed [!]
+    // Order -<- = order item = -<- product
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
-    // >> Many OrderItems refer to one Product
-    // The foreign key 'product_id' will be created in the 'order_item' table [!]
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    // [*] Method will be called automatically by JPA/Hibernate,
-    // before an entity is first PERSISTED (inserted) into the DB.
     @PrePersist
-    // [*] + method will be called automatically
-    // before an existing entity is UPDATED in the DB.
     @PreUpdate
     public void calculateFinalItemPrice() {
-        // Ensure discountPercentage is within a valid range (0.0 to 1.0)
         double actualDiscount = Math.max(0.0, Math.min(1.0, this.discountPercentage));
         this.finalItemPrice = (this.priceAtOrder * this.quantity) * (1 - actualDiscount);
     }

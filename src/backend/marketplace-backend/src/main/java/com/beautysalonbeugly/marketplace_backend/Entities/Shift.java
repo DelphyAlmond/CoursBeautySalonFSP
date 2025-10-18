@@ -24,18 +24,15 @@ public class Shift {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Proper ManyToOne relationship to Worker
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "worker_id", nullable = false) // Foreign key column
-    private Worker worker; // Reference to the actual Worker entity
+    @JoinColumn(name = "worker_id", nullable = false)
+    private Worker worker;
 
-    private LocalDateTime startTime; // Use LocalDateTime
-    private LocalDateTime endTime; // Use LocalDateTime
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 
-    // Optional: a flag to indicate if the shift is currently active
     private boolean active = true;
 
-    // Constructor without ID, for creating new shifts
     public Shift(Worker worker, LocalDateTime startTime, LocalDateTime endTime) {
         this.worker = worker;
         this.startTime = startTime;

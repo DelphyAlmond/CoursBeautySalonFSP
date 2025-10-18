@@ -27,28 +27,24 @@ public class VisitItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    // > Represent duration (e.g., 60 minutes). Adjust as per business logic.
     private int quantityOrDuration;
-    private double priceAtVisit; // The price of ONE service unit/duration at the moment of the visit
+    private double priceAtVisit;
     private double discountPercentage;
     private double finalServicePrice;
 
-    // >> Many VisitServices belong to one Visit
-    // The foreign key 'visit_id' will be created in the 'visit_service' table [!]
+    // Visit -<- = visit item = -<- service
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visit_id", nullable = false)
     private Visit visit;
 
-    // >> Many VisitServices refer to one Service
-    // The foreign key 'service_id' will be created in the 'visit_service' table [!]
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
-    private Service service;
+    private SalonService service;
 
     @PrePersist
     @PreUpdate
     public void calculateFinalServicePrice() {
-        // Ensure discountPercentage is within a valid range (0.0 to 1.0)
         double actualDiscount = Math.max(0.0, Math.min(1.0, this.discountPercentage));
         this.finalServicePrice = (this.priceAtVisit * this.quantityOrDuration) * (1 - actualDiscount);
     }

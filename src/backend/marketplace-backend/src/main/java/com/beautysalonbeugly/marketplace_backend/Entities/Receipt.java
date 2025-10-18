@@ -13,6 +13,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,27 +24,28 @@ import jakarta.persistence.GenerationType;
 @AllArgsConstructor
 @NoArgsConstructor
 
-// Exclude parent/child from equals/hashCode
-@EqualsAndHashCode(exclude = { "order", "visit" })
+// Exclude parent/child from equals/hashCode : + worker(id)
+@EqualsAndHashCode(exclude = { "order", "visit", "worker" })
 
 public class Receipt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // A Receipt is linked to exactly one Order (One-to-One relationship)
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", unique = true) // Foreign key to Order table, must be unique
+    @JoinColumn(name = "order_id", unique = true)
     private Order order;
 
-    // A Receipt is linked to exactly one Visit (One-to-One relationship)
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "visit_id", unique = true) // Foreign key to Visit table, must be unique
+    @JoinColumn(name = "visit_id", unique = true)
     private Visit visit;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "worker_id", nullable = false)
+    private Worker worker;
+
     private LocalDateTime receiptDate;
-    private double finalTotalAmount; // The final amount after all calculations (Order.totalAmount +
-                                     // Visit.totalAmount)
+    private double finalTotalAmount; // [ * ] (Order.totalAmount + Visit.totalAmount)
 
     @PrePersist
     @PreUpdate

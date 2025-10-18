@@ -32,24 +32,20 @@ import jakarta.persistence.GenerationType;
 
 public class Visit {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-incrementing primary key
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // >> Many Visits can belong to one Customer
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    // >> Many Visits can be performed by one Worker
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "worker_id", nullable = false)
-    private Worker worker; // [*] The worker who performed the services
+    private Worker worker;
 
-    // >> One Visit can have Many VisitItems
     @OneToMany(mappedBy = "visit", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<VisitItem> visitItems = new ArrayList<>(); // * Initialize to prevent NullPointerExceptions
+    private List<VisitItem> visitItems = new ArrayList<>();
 
-    // >> A Visit can have one Receipt
     @OneToOne(mappedBy = "visit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Receipt receipt;
 
@@ -60,25 +56,21 @@ public class Visit {
     @PrePersist
     @PreUpdate
     public void calculateTotalAmount() {
-        // * Sum up the final price of all visit services
         this.totalAmount = visitItems.stream()
                 .mapToDouble(VisitItem::getFinalServicePrice)
                 .sum();
     }
 
-    // --- Helper Methods for Bidirectional Relationship Management ---
-    // Good practice to keep both sides of a bidirectional relationship in sync
-
     public void addVisitService(VisitItem visitService) {
         visitItems.add(visitService);
-        visitService.setVisit(this); // > Set the 'visit' field in the VisitService
+        visitService.setVisit(this); // > Set the 'visit' field in the VisitItem
         calculateTotalAmount(); // > Recalculate total when service is added
     }
 
     public void removeVisitService(VisitItem visitService) {
         visitItems.remove(visitService);
-        visitService.setVisit(null); // > Clear the 'visit' field in the VisitService
-        calculateTotalAmount(); // > Recalculate total when service is removed
+        visitService.setVisit(null); // > Clear
+        calculateTotalAmount(); // > Recalculate when removed
     }
 
     public void setReceipt(Receipt receipt) {
